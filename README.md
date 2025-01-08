@@ -90,4 +90,9 @@ the pi using keyboard and mouse. After initial setup is complete the remainder c
 ## Create Project Directories
 - -> mkdir -p FTP/files
 - -> chmod a-w FTP
-- -> mkdir MWPLogData 
+- -> mkdir MWPLogData
+
+## Useful Documents
+### See the Interesting Stuff Repository for the following docs that are helpful
+[
+](https://github.com/whitejv/Interesting-Stuff/blob/main/Full%20Compute%20Module%204%20(Raspberry%20Pi)%20Setup%20_%20Imaging%20Guide.pdf)
