@@ -54,17 +54,8 @@ sudo apt-get install -y libjson-c-dev cmake mosquitto mosquitto-clients
 sudo systemctl stop mosquitto
 sudo systemctl enable mosquitto.service
 
-# Backup and update Mosquitto configuration
-if [ -f /etc/mosquitto/mosquitto.conf ]; then
-    sudo cp /etc/mosquitto/mosquitto.conf /etc/mosquitto/mosquitto.conf.backup
-fi
-
-# Create fresh mosquitto.conf
-echo "listener 1883
-allow_anonymous true
-persistence true
-persistence_location /var/lib/mosquitto/
-log_dest file /var/log/mosquitto/mosquitto.log" | sudo tee /etc/mosquitto/mosquitto.conf
+# Copy the prepared mosquitto configuration
+sudo cp /home/pi/MWPEnv/misc/mymosquitto.conf /etc/mosquitto/conf.d/.
 
 # Start Mosquitto service
 sudo systemctl start mosquitto
