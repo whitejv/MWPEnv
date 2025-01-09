@@ -2,12 +2,19 @@
 set -e
 set -x
 
-# Function for error handling
-handle_error() {
-    echo "An error occurred on line $1"
-    exit 1
-}
 
+#Define all functions at the start
+handle_error() {
+echo "An error occurred on line $1"
+exit 1
+}
+verify_service() {
+if ! systemctl is-active --quiet $1; then
+echo "Error: $1 failed to start"
+exit 1
+fi
+}
+#Set error handling
 trap 'handle_error $LINENO' ERR
 
 # Save original directory
@@ -23,12 +30,12 @@ sudo apt-get update
 sudo apt-get install -y libssl-dev xutils-dev
 
 # Setup FTP
-mkdir -p /home/$USER/FTP/files
-chmod a-w /home/$USER/FTP
+mkdir -p /home/pi/$USER/FTP/files
+chmod a-w /home/pi/$USER/FTP
 sudo apt-get install -y vsftpd
 
 # Copy the prepared vsftpd configuration
-sudo cp /home/MWPEnv/misc/vsftpd.conf /etc/.
+sudo cp /home/pi/MWPEnv/misc/vsftpd.conf /etc/.
 
 # Restart FTP service
 sudo service vsftpd restart
@@ -76,15 +83,16 @@ make
 sudo make install
 cd "$ORIGINAL_DIR" || exit 1
 
-# Configure Mosquitto
-if [ -f /etc/mosquitto/mosquitto.conf ]; then
-    sudo cp /etc/mosquitto/mosquitto.conf /etc/mosquitto/mosquitto.conf.backup
-fi
+# Install Python virtual environment package
+sudo apt-get install -y python3-venv python3-full
 
-echo "listener 1883
-allow_anonymous true" | sudo tee -a /etc/mosquitto/mosquitto.conf
+# Create virtual environment
+python3 -m venv ~/mwp_venv
 
-# Install Python dependencies
+# Activate virtual environment
+source ~/mwp_venv/bin/activate
+
+# Install Python dependencies within virtual environment
 pip install --upgrade pip
 git clone https://github.com/allenporter/pyrainbird.git
 cd pyrainbird || exit 1
@@ -92,6 +100,14 @@ pip install -r requirements_dev.txt --ignore-requires-python
 pip install . --ignore-requires-python
 pip install paho-mqtt
 cd "$ORIGINAL_DIR" || exit 1
+
+# Deactivate virtual environment
+deactivate
+
+# Create activation script for future use
+echo '#!/bin/bash
+source ~/mwp_venv/bin/activate' > activate_mwp.sh
+chmod +x activate_mwp.sh
 
 # Create project directories
 mkdir -p MWPLogData
