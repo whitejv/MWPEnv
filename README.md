@@ -8,6 +8,7 @@ This guide provides instructions for setting up the Raspberry Pi Linux environme
 - Monitor, keyboard, and mouse (for initial setup only)
 - Network connection
 - Basic familiarity with Linux commands
+- User account must be 'pi' (default Raspberry Pi user)
 
 ## Initial Setup
 
@@ -53,42 +54,169 @@ sudo ./setup.sh
 
 The script will automatically:
 - Install and configure all required packages
-- Set up FTP server
-- Configure MQTT
-- Install Python dependencies
+- Set up FTP server using prepared configuration
+- Configure MQTT using prepared configuration
+- Create and configure a Python virtual environment
+- Install all required Python dependencies
 - Create necessary project directories
+- Verify all service installations
 
-After the script completes, verify the installation by checking the status of key services:
+### After Installation
+
+1. The script creates a Python virtual environment. To activate it:
+```bash
+source ~/mwp_venv/bin/activate  # Or use ./activate_mwp.sh
+```
+
+2. When finished working with Python packages:
+```bash
+deactivate
+```
+
+3. Verify services are running:
 ```bash
 systemctl status vsftpd
 systemctl status mosquitto
 ```
 
-If you encounter any issues with the automated setup, refer to the manual installation steps below for troubleshooting.
-
 ## Manual Installation Steps (Alternative Method)
 
-If you need to install components individually or troubleshoot the automated installation, follow these steps:
+If you prefer to install components individually or need to troubleshoot the automated installation, follow these steps:
 
-### 1. Git (Required for Rapi-Lite)
+### 1. Install Git and Initial Packages
 ```bash
-sudo apt install git
+sudo apt update
+sudo apt-get install -y git
+sudo apt-get install -y libssl-dev xutils-dev
 ```
 
-[Rest of the manual installation steps remain the same...]
+### 2. Setup FTP Server
+```bash
+# Create FTP directories
+mkdir -p /home/pi/$USER/FTP/files
+chmod a-w /home/pi/$USER/FTP
 
-[Previous sections for OpenSSL, FTP Server, Development Libraries, MQTT Setup, Python Dependencies, and Project Structure Setup remain unchanged]
+# Install FTP server
+sudo apt-get install -y vsftpd
+
+# Copy configuration file
+sudo cp /home/pi/MWPEnv/misc/vsftpd.conf /etc/.
+sudo service vsftpd restart
+
+# Verify service
+systemctl status vsftpd
+```
+
+### 3. Install Development Libraries
+```bash
+sudo apt-get install -y libjson-c-dev cmake
+```
+
+### 4. Setup MQTT (Mosquitto)
+```bash
+# Install Mosquitto
+sudo apt-get install -y mosquitto mosquitto-clients
+
+# Stop service for configuration
+sudo systemctl stop mosquitto
+sudo systemctl enable mosquitto.service
+
+# Copy configuration file
+sudo cp /home/pi/MWPEnv/misc/mymosquitto.conf /etc/mosquitto/conf.d/.
+
+# Start service
+sudo systemctl start mosquitto
+
+# Verify service
+systemctl status mosquitto
+```
+
+### 5. Install MQTT Client Library
+```bash
+git clone https://github.com/eclipse/paho.mqtt.c.git
+cd paho.mqtt.c
+make
+sudo make install
+cd ..
+```
+
+### 6. Setup Python Environment
+```bash
+# Install Python requirements
+sudo apt-get install -y python3-venv python3-full
+
+# Create and activate virtual environment
+python3 -m venv ~/mwp_venv
+source ~/mwp_venv/bin/activate
+
+# Install Python packages
+pip install --upgrade pip
+git clone https://github.com/allenporter/pyrainbird.git
+cd pyrainbird
+pip install -r requirements_dev.txt --ignore-requires-python
+pip install . --ignore-requires-python
+pip install paho-mqtt
+cd ..
+
+# Create activation script
+echo '#!/bin/bash
+source ~/mwp_venv/bin/activate' > activate_mwp.sh
+chmod +x activate_mwp.sh
+
+# Deactivate virtual environment
+deactivate
+```
+
+### 7. Create Project Directories
+```bash
+mkdir -p MWPLogData
+```
+
+### 8. Verify Installation
+```bash
+# Check service status
+systemctl status vsftpd
+systemctl status mosquitto
+
+# Test virtual environment
+source ~/mwp_venv/bin/activate
+python -c "import paho.mqtt.client as mqtt; print('MQTT client available')"
+deactivate
+```
+
+## Service Locations
+
+Key files and directories:
+- FTP root: `/home/pi/$USER/FTP/files`
+- MQTT config: `/etc/mosquitto/conf.d/mymosquitto.conf`
+- vsftpd config: `/etc/vsftpd.conf`
+- Python virtual environment: `~/mwp_venv`
+- Log directory: `MWPLogData`
 
 ## Troubleshooting
 
 If you encounter issues with the automated script:
-1. Check the script output for error messages
-2. Run individual commands manually to identify the failing component
-3. Check system logs: `journalctl -xe`
-4. Verify service status: `systemctl status <service-name>`
-5. Check configuration files for syntax errors
-6. Ensure all prerequisites are installed
-7. Verify network connectivity
+
+1. Check requirements:
+   - Ensure you're running as the 'pi' user
+   - Verify you have internet connectivity
+   - Ensure all prerequisites are installed
+
+2. Common issues:
+   - If services fail to start, check logs:
+     ```bash
+     sudo journalctl -u vsftpd -n 50
+     sudo journalctl -u mosquitto -n 50
+     ```
+   - If Python packages fail to install, ensure you're in the virtual environment:
+     ```bash
+     source ~/mwp_venv/bin/activate
+     ```
+
+3. Manual verification:
+   - FTP service: `systemctl status vsftpd`
+   - MQTT service: `systemctl status mosquitto`
+   - Python virtual environment: `which python` should point to ~/mwp_venv/bin/python
 
 ## Additional Resources
 
