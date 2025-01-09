@@ -1,32 +1,70 @@
 #!/bin/bash
+set -e
 set -x
 
-# Install OpenSSL for C/C++ programs
+# Function for error handling
+handle_error() {
+    echo "An error occurred on line $1"
+    exit 1
+}
+
+trap 'handle_error $LINENO' ERR
+
+# Save original directory
+ORIGINAL_DIR=$(pwd)
+
+# Verify/Install Git
+if ! command -v git &> /dev/null; then
+    sudo apt-get install -y git
+fi
+
+# Update system and install OpenSSL
 sudo apt-get update
 sudo apt-get install -y libssl-dev xutils-dev
 
-# Install FTP Daemon and configure it
+# Setup FTP
 mkdir -p /home/$USER/FTP/files
 chmod a-w /home/$USER/FTP
 sudo apt-get install -y vsftpd
 sudo service vsftpd restart
 
-# Install JSON Lib, CMake, Mosquitto MQTT Service
-sudo apt-get install -y libjson-c-dev 
-sudo apt-get install -y cmake 
-sudo apt-get install -y mosquitto mosquitto-clients
+# Install required libraries
+sudo apt-get install -y libjson-c-dev cmake mosquitto mosquitto-clients
 
-# Enable Mosquitto service and check its version
+# Enable and verify Mosquitto
 sudo systemctl enable mosquitto.service
 mosquitto -v
+verify_service mosquitto
 
-# Install MQTT and update its config and application libraries
+# Install MQTT
 git clone https://github.com/eclipse/paho.mqtt.c.git
-cd paho.mqtt.c
+cd paho.mqtt.c || exit 1
 make
 sudo make install
-cd /etc/mosquitto
-echo "listener 1883
-allow_anonymous true" | sudo tee -a mosquitto.conf
+cd "$ORIGINAL_DIR" || exit 1
 
-echo "Setup script has finished executing."
+# Configure Mosquitto
+if [ -f /etc/mosquitto/mosquitto.conf ]; then
+    sudo cp /etc/mosquitto/mosquitto.conf /etc/mosquitto/mosquitto.conf.backup
+fi
+
+echo "listener 1883
+allow_anonymous true" | sudo tee -a /etc/mosquitto/mosquitto.conf
+
+# Install Python dependencies
+pip install --upgrade pip
+git clone https://github.com/allenporter/pyrainbird.git
+cd pyrainbird || exit 1
+pip install -r requirements_dev.txt --ignore-requires-python
+pip install . --ignore-requires-python
+pip install paho-mqtt
+cd "$ORIGINAL_DIR" || exit 1
+
+# Create project directories
+mkdir -p MWPLogData
+
+# Verify services
+verify_service vsftpd
+verify_service mosquitto
+
+echo "Setup script has completed successfully."
