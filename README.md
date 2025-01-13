@@ -38,28 +38,40 @@ sudo reboot
 
 ## Automated Installation (Recommended)
 
-The fastest way to set up your environment is using our automated setup script:
+The fastest way to set up your environment is using our automated setup scripts:
 
 ```bash
 # Clone the repository
 git clone https://github.com/whitejv/MWPEnv.git
 
-# Copy and make the setup script executable
-cp MWPEnv/setup.sh .
-chmod +x setup.sh
+# Copy and make the setup scripts executable
+cp MWPEnv/setup.sh MWPEnv/setupPy.sh MWPEnv/cleanPy.sh .
+chmod +x setup.sh setupPy.sh cleanPy.sh
 
-# Run the setup script
+# Run the setup scripts in sequence
 sudo ./setup.sh
+./setupPy.sh
 ```
 
-The script will automatically:
-- Install and configure all required packages
-- Set up FTP server using prepared configuration
-- Configure MQTT using prepared configuration
-- Create and configure a Python virtual environment
-- Install all required Python dependencies
-- Create necessary project directories
-- Verify all service installations
+The scripts will automatically:
+- `setup.sh`:
+  - Install and configure all required system packages
+  - Set up FTP server using prepared configuration
+  - Configure MQTT using prepared configuration
+  - Create necessary project directories
+  - Verify all service installations
+
+- `setupPy.sh`:
+  - Install Rust (required for some Python packages)
+  - Create and configure a Python virtual environment
+  - Install all required Python dependencies
+  - Create activation script for the virtual environment
+
+If you encounter issues with Python setup, you can use the cleanup script:
+```bash
+./cleanPy.sh  # Removes Python environment for fresh installation
+./setupPy.sh  # Run Python setup again
+```
 
 ### After Installation
 
@@ -140,7 +152,13 @@ sudo make install
 cd ..
 ```
 
-### 6. Setup Python Environment
+### 6. Install Rust (Required for Python Packages)
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+source "$HOME/.cargo/env"
+```
+
+### 7. Setup Python Environment
 ```bash
 # Install Python requirements
 sudo apt-get install -y python3-venv python3-full
@@ -149,11 +167,14 @@ sudo apt-get install -y python3-venv python3-full
 python3 -m venv ~/mwp_venv
 source ~/mwp_venv/bin/activate
 
+# Ensure Rust is in PATH
+source "$HOME/.cargo/env"
+
 # Install Python packages
 pip install --upgrade pip
 git clone https://github.com/allenporter/pyrainbird.git
 cd pyrainbird
-pip install -r requirements_dev.txt --ignore-requires-python
+pip install --no-dependencies -r requirements_dev.txt --ignore-requires-python
 pip install . --ignore-requires-python
 pip install paho-mqtt
 cd ..
@@ -167,12 +188,12 @@ chmod +x activate_mwp.sh
 deactivate
 ```
 
-### 7. Create Project Directories
+### 8. Create Project Directories
 ```bash
 mkdir -p MWPLogData
 ```
 
-### 8. Verify Installation
+### 9. Verify Installation
 ```bash
 # Check service status
 systemctl status vsftpd
@@ -195,7 +216,7 @@ Key files and directories:
 
 ## Troubleshooting
 
-If you encounter issues with the automated script:
+If you encounter issues with the automated scripts:
 
 1. Check requirements:
    - Ensure you're running as the 'pi' user
@@ -207,6 +228,11 @@ If you encounter issues with the automated script:
      ```bash
      sudo journalctl -u vsftpd -n 50
      sudo journalctl -u mosquitto -n 50
+     ```
+   - If Python setup fails:
+     ```bash
+     ./cleanPy.sh  # Clean up Python environment
+     ./setupPy.sh  # Try Python setup again
      ```
    - If Python packages fail to install, ensure you're in the virtual environment:
      ```bash
