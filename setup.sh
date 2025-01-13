@@ -1,19 +1,34 @@
 #!/bin/bash
 set -e
 set -x
-
-
 #Define all functions at the start
 handle_error() {
-echo "An error occurred on line $1"
-exit 1
+    echo "An error occurred on line $1"
+    exit 1
 }
+
 verify_service() {
-if ! systemctl is-active --quiet $1; then
-echo "Error: $1 failed to start"
-exit 1
-fi
+    if ! systemctl is-active --quiet $1; then
+        echo "Error: $1 failed to start"
+        exit 1
+    fi
 }
+
+install_rust() {
+    if ! command -v rustc &> /dev/null; then
+        echo "Installing Rust..."
+        # Download and install Rust
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        # Add Rust to current shell PATH
+        source "$HOME/.cargo/env"
+        # Verify installation
+        if ! command -v rustc &> /dev/null; then
+            echo "Rust installation failed"
+            exit 1
+        fi
+    fi
+}
+
 #Set error handling
 trap 'handle_error $LINENO' ERR
 
@@ -74,6 +89,9 @@ make
 sudo make install
 cd "$ORIGINAL_DIR" || exit 1
 
+# Install Rust (required for some Python packages)
+install_rust
+
 # Install Python virtual environment package
 sudo apt-get install -y python3-venv python3-full
 
@@ -85,6 +103,10 @@ source ~/mwp_venv/bin/activate
 
 # Install Python dependencies within virtual environment
 pip install --upgrade pip
+
+# Ensure Rust is in PATH for the virtual environment
+source "$HOME/.cargo/env"
+
 git clone https://github.com/allenporter/pyrainbird.git
 cd pyrainbird || exit 1
 pip install -r requirements_dev.txt --ignore-requires-python
