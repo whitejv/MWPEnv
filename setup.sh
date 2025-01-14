@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 set -x
+
 #Define all functions at the start
 handle_error() {
     echo "An error occurred on line $1"
@@ -30,8 +31,8 @@ sudo apt-get update
 sudo apt-get install -y libssl-dev xutils-dev
 
 # Setup FTP
-mkdir -p /home/pi/$USER/FTP/files
-chmod a-w /home/pi/$USER/FTP
+mkdir -p "/home/pi/FTP/files"  # Changed to use absolute path
+chmod a-w "/home/pi/FTP"
 sudo apt-get install -y vsftpd
 
 # Copy the prepared vsftpd configuration
@@ -76,6 +77,14 @@ cd "$ORIGINAL_DIR" || exit 1
 
 # Create project directories
 mkdir -p MWPLogData
+# Ensure correct ownership and permissions
+chown pi:pi MWPLogData
+chmod 755 MWPLogData
+
+# Also ensure FTP directories have correct ownership
+chown pi:pi "/home/pi/FTP"
+chown pi:pi "/home/pi/FTP/files"
+chmod 755 "/home/pi/FTP/files"
 
 # Verify services
 verify_service vsftpd
