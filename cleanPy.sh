@@ -16,14 +16,14 @@ if [ -n "$VIRTUAL_ENV" ]; then
 fi
 
 # Remove Python virtual environment
-if [ -d ~/mwp_venv ]; then
-    rm -rf ~/mwp_venv
+if [ -d /home/pi/mwp_venv ]; then
+    rm -rf /home/pi/mwp_venv
     echo "Removed Python virtual environment"
 fi
 
 # Remove pyrainbird directory if it exists
-if [ -d ~/pyrainbird ]; then
-    rm -rf ~/pyrainbird
+if [ -d /home/pi/pyrainbird ]; then
+    rm -rf /home/pi/pyrainbird
     echo "Removed pyrainbird directory"
 fi
 

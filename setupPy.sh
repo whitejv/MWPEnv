@@ -13,6 +13,9 @@ trap 'handle_error $LINENO' ERR
 # Save original directory
 ORIGINAL_DIR=$(pwd)
 
+# Define virtual environment path explicitly
+VENV_PATH="/home/pi/mwp_venv"
+
 # Install Rust (required for some Python packages)
 if ! command -v rustc &> /dev/null; then
     echo "Installing Rust..."
@@ -23,11 +26,24 @@ fi
 # Install Python virtual environment package
 sudo apt-get install -y python3-venv python3-full
 
-# Create virtual environment
-python3 -m venv ~/mwp_venv
+# Create virtual environment with explicit path
+echo "Creating virtual environment at $VENV_PATH"
+python3 -m venv $VENV_PATH
+
+# Verify virtual environment creation
+if [ ! -d "$VENV_PATH" ]; then
+    echo "Failed to create virtual environment"
+    exit 1
+fi
 
 # Activate virtual environment
-source ~/mwp_venv/bin/activate
+source "$VENV_PATH/bin/activate"
+
+# Verify activation
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo "Failed to activate virtual environment"
+    exit 1
+fi
 
 # Install Python dependencies within virtual environment
 pip install --upgrade pip
@@ -44,7 +60,7 @@ cd "$ORIGINAL_DIR" || exit 1
 
 # Create activation script for future use
 echo '#!/bin/bash
-source ~/mwp_venv/bin/activate' > activate_mwp.sh
+source "'$VENV_PATH'/bin/activate"' > activate_mwp.sh
 chmod +x activate_mwp.sh
 
 # Deactivate virtual environment
