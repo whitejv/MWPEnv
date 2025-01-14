@@ -49,23 +49,25 @@ cp MWPEnv/setup.sh MWPEnv/setupPy.sh MWPEnv/cleanPy.sh .
 chmod +x setup.sh setupPy.sh cleanPy.sh
 
 # Run the setup scripts in sequence
-sudo ./setup.sh
-./setupPy.sh
+./setup.sh    # Will prompt for sudo password when needed
+./setupPy.sh  # Will prompt for sudo password only for initial package installation
 ```
 
 The scripts will automatically:
 - `setup.sh`:
-  - Install and configure all required system packages
+  - Install and configure all required system packages (requires sudo)
   - Set up FTP server using prepared configuration
   - Configure MQTT using prepared configuration
-  - Create necessary project directories
+  - Create necessary project directories with proper ownership
   - Verify all service installations
 
 - `setupPy.sh`:
   - Install Rust (required for some Python packages)
+  - Install Python virtual environment package (requires sudo briefly)
   - Create and configure a Python virtual environment
   - Install all required Python dependencies
   - Create activation script for the virtual environment
+  - Ensure all files and directories have correct ownership
 
 If you encounter issues with Python setup, you can use the cleanup script:
 ```bash
@@ -105,8 +107,8 @@ sudo apt-get install -y libssl-dev xutils-dev
 ### 2. Setup FTP Server
 ```bash
 # Create FTP directories
-mkdir -p /home/pi/$USER/FTP/files
-chmod a-w /home/pi/$USER/FTP
+mkdir -p "/home/pi/FTP/files"
+chmod a-w "/home/pi/FTP"
 
 # Install FTP server
 sudo apt-get install -y vsftpd
@@ -160,12 +162,15 @@ source "$HOME/.cargo/env"
 
 ### 7. Setup Python Environment
 ```bash
-# Install Python requirements
+# Install Python requirements (requires sudo)
 sudo apt-get install -y python3-venv python3-full
 
 # Create and activate virtual environment
 python3 -m venv ~/mwp_venv
 source ~/mwp_venv/bin/activate
+
+# Ensure virtual environment has correct ownership
+chown -R pi:pi ~/mwp_venv
 
 # Ensure Rust is in PATH
 source "$HOME/.cargo/env"
@@ -183,6 +188,7 @@ cd ..
 echo '#!/bin/bash
 source ~/mwp_venv/bin/activate' > activate_mwp.sh
 chmod +x activate_mwp.sh
+chown pi:pi activate_mwp.sh
 
 # Deactivate virtual environment
 deactivate
@@ -191,6 +197,8 @@ deactivate
 ### 8. Create Project Directories
 ```bash
 mkdir -p MWPLogData
+chown pi:pi MWPLogData
+chmod 755 MWPLogData
 ```
 
 ### 9. Verify Installation
@@ -208,7 +216,7 @@ deactivate
 ## Service Locations
 
 Key files and directories:
-- FTP root: `/home/pi/$USER/FTP/files`
+- FTP root: `/home/pi/FTP/files`
 - MQTT config: `/etc/mosquitto/conf.d/mymosquitto.conf`
 - vsftpd config: `/etc/vsftpd.conf`
 - Python virtual environment: `~/mwp_venv`
@@ -237,6 +245,13 @@ If you encounter issues with the automated scripts:
    - If Python packages fail to install, ensure you're in the virtual environment:
      ```bash
      source ~/mwp_venv/bin/activate
+     ```
+   - If you have permission issues:
+     ```bash
+     # Fix ownership of virtual environment
+     sudo chown -R pi:pi ~/mwp_venv
+     # Fix ownership of project directories
+     sudo chown -R pi:pi MWPLogData
      ```
 
 3. Manual verification:
