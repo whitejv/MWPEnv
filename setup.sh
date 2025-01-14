@@ -1,19 +1,19 @@
 #!/bin/bash
 set -e
 set -x
-
-
 #Define all functions at the start
 handle_error() {
-echo "An error occurred on line $1"
-exit 1
+    echo "An error occurred on line $1"
+    exit 1
 }
+
 verify_service() {
-if ! systemctl is-active --quiet $1; then
-echo "Error: $1 failed to start"
-exit 1
-fi
+    if ! systemctl is-active --quiet $1; then
+        echo "Error: $1 failed to start"
+        exit 1
+    fi
 }
+
 #Set error handling
 trap 'handle_error $LINENO' ERR
 
@@ -74,32 +74,6 @@ make
 sudo make install
 cd "$ORIGINAL_DIR" || exit 1
 
-# Install Python virtual environment package
-sudo apt-get install -y python3-venv python3-full
-
-# Create virtual environment
-python3 -m venv ~/mwp_venv
-
-# Activate virtual environment
-source ~/mwp_venv/bin/activate
-
-# Install Python dependencies within virtual environment
-pip install --upgrade pip
-git clone https://github.com/allenporter/pyrainbird.git
-cd pyrainbird || exit 1
-pip install -r requirements_dev.txt --ignore-requires-python
-pip install . --ignore-requires-python
-pip install paho-mqtt
-cd "$ORIGINAL_DIR" || exit 1
-
-# Deactivate virtual environment
-deactivate
-
-# Create activation script for future use
-echo '#!/bin/bash
-source ~/mwp_venv/bin/activate' > activate_mwp.sh
-chmod +x activate_mwp.sh
-
 # Create project directories
 mkdir -p MWPLogData
 
@@ -107,4 +81,4 @@ mkdir -p MWPLogData
 verify_service vsftpd
 verify_service mosquitto
 
-echo "Setup script has completed successfully."
+echo "Basic system setup completed successfully. Run setupPy.sh to set up Python environment."
