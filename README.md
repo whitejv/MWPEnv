@@ -27,6 +27,12 @@ ssh pi@xxx.local  # Replace xxx with your Pi's hostname
 # Default password: raspberry
 sudo raspi-config  # Navigate to Interfaces and enable VNC
 ```
+If the following error occurs:
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+Use Command: ssh-keygen -R xxx.local
 
 ### 2. Update System Packages
 
