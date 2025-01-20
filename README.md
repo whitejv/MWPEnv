@@ -101,10 +101,11 @@ systemctl status mosquitto
 
 4. To configure your Git username and email on a remote system, you'll need to use the git config command. Here's how you can do it:
 
-Set the Username:
+Set the Username and Email:
+```bash
 git config --global user.name "Your Username"
-Set the Email:
 git config --global user.email "your.email@example.com"
+```
 
 ## Manual Installation Steps (Alternative Method)
 
