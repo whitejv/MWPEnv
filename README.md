@@ -99,6 +99,13 @@ systemctl status vsftpd
 systemctl status mosquitto
 ```
 
+4. To configure your Git username and email on a remote system, you'll need to use the git config command. Here's how you can do it:
+
+Set the Username:
+git config --global user.name "Your Username"
+Set the Email:
+git config --global user.email "your.email@example.com"
+
 ## Manual Installation Steps (Alternative Method)
 
 If you prefer to install components individually or need to troubleshoot the automated installation, follow these steps:
