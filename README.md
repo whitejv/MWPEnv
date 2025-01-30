@@ -212,7 +212,7 @@ deactivate
 ```bash
 mkdir -p MWPLogData
 chown pi:pi MWPLogData
-chmod 755 MWPLogData
+chmod 777 MWPLogData
 ```
 
 ### 9. Verify Installation
