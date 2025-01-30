@@ -79,7 +79,7 @@ cd "$ORIGINAL_DIR" || exit 1
 mkdir -p MWPLogData
 # Ensure correct ownership and permissions
 chown pi:pi MWPLogData
-chmod 755 MWPLogData
+chmod 777 MWPLogData
 
 # Also ensure FTP directories have correct ownership
 chown pi:pi "/home/pi/FTP"
