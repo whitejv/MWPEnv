@@ -214,8 +214,41 @@ mkdir -p MWPLogData
 chown pi:pi MWPLogData
 chmod 777 MWPLogData
 ```
+### 9. install MONIT to keep an eye on processes
+```bash
+sudo apt install monit
+sudo nano /etc/monit/monitrc
+Uncomment the following
+#set httpd port 2812 and
+#    use address localhost
+#    allow localhost
+#    allow admin:monit
+Add the following to the bottom of the file
+# Monitor blynkwater process as the pi user
+check process blynkwater matching "blynkWater"
+    start program = "/usr/bin/sudo -u pi /home/pi/MWPCore/bin/blynkWater -P" as uid 1000 and gid 1000
+    stop program = "/usr/bin/pkill -f blynkWater"
+    if changed pid then alert
+    if not exist then start
 
-### 9. Verify Installation
+# Monitor blynkalert process as the pi user
+check process blynkalert matching "blynkAlert"
+    start program = "/usr/bin/sudo -u pi /home/pi/MWPCore/bin/blynkAlert -P" as uid 1000 and gid 1000
+    stop program = "/usr/bin/pkill -f blynkAlert"
+    if changed pid then alert
+    if not exist then start
+save file
+sudo visudo
+  pi ALL=(ALL) NOPASSWD: /home/pi/MWPCore/bin/blynkWater -P
+  pi ALL=(ALL) NOPASSWD: /home/pi/MWPCore/bin/blynkAlert -P
+save file
+Start Monit: sudo systemctl start monit
+Enable Monit to start on boot: sudo systemctl enable monit
+Check Monit status: sudo systemctl status monit
+Reload Monit configuration: sudo monit reload
+```
+
+### 10. Verify Installation
 ```bash
 # Check service status
 systemctl status vsftpd
